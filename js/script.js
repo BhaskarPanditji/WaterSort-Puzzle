@@ -1558,3 +1558,34 @@ function resetAllData() {
 
 
 }
+// ================= EXIT GAME =================
+
+function exitGame() {
+
+    try {
+
+        // Website2APK
+        if (window.Website2APK?.exitApp) {
+            window.Website2APK.exitApp();
+            return;
+        }
+
+        // Cordova
+        if (navigator.app?.exitApp) {
+            navigator.app.exitApp();
+            return;
+        }
+
+        // Capacitor
+        if (window.Capacitor?.Plugins?.App?.exitApp) {
+            window.Capacitor.Plugins.App.exitApp();
+            return;
+        }
+
+    } catch (e) {
+        console.log(e);
+    }
+
+    alert("Exit not supported on this app.");
+}
+
