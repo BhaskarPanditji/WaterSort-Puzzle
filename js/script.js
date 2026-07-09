@@ -1527,39 +1527,3 @@ function resetAllData() {
 
 
 }
-function exitGame() {
-
-    try {
-
-        // Appilix JS Bridge
-        if (typeof appilix !== "undefined") {
-            appilix.postMessage(JSON.stringify({
-                type: "exit_app"
-            }));
-            return;
-        }
-
-        // Website2APK
-        if (window.Website2APK?.exitApp) {
-            window.Website2APK.exitApp();
-            return;
-        }
-
-        // Cordova
-        if (navigator.app?.exitApp) {
-            navigator.app.exitApp();
-            return;
-        }
-
-        // Capacitor
-        if (window.Capacitor?.Plugins?.App?.exitApp) {
-            window.Capacitor.Plugins.App.exitApp();
-            return;
-        }
-
-    } catch (e) {
-        console.log(e);
-    }
-
-    alert("Exit not supported on this app.");
-}
