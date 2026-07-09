@@ -1529,14 +1529,37 @@ function resetAllData() {
 }
 function exitGame() {
 
-    console.log("Website2APK:", window.Website2APK);
-    console.log("navigator.app:", window.navigator.app);
-    console.log("Capacitor:", window.Capacitor);
+    try {
 
-    alert(
-        "Website2APK = " + !!window.Website2APK +
-        "\nCordova = " + !!window.navigator.app +
-        "\nCapacitor = " + !!window.Capacitor
-    );
+        // Appilix JS Bridge
+        if (typeof appilix !== "undefined") {
+            appilix.postMessage(JSON.stringify({
+                type: "exit_app"
+            }));
+            return;
+        }
 
+        // Website2APK
+        if (window.Website2APK?.exitApp) {
+            window.Website2APK.exitApp();
+            return;
+        }
+
+        // Cordova
+        if (navigator.app?.exitApp) {
+            navigator.app.exitApp();
+            return;
+        }
+
+        // Capacitor
+        if (window.Capacitor?.Plugins?.App?.exitApp) {
+            window.Capacitor.Plugins.App.exitApp();
+            return;
+        }
+
+    } catch (e) {
+        console.log(e);
+    }
+
+    alert("Exit not supported on this app.");
 }
