@@ -1312,80 +1312,6 @@ function nextLevel() {
 // ======================================
 
 
-// ================= EXIT GAME =================
-
-function exitGame() {
-
-
-    try {
-
-
-        // Web2APK / Website2APK
-
-        if (
-            window.Website2APK &&
-            typeof window.Website2APK.exitApp === "function"
-        ) {
-
-            window.Website2APK.exitApp();
-
-            return;
-
-        }
-
-
-
-        // Cordova
-
-        if (
-            window.navigator.app &&
-            window.navigator.app.exitApp
-        ) {
-
-            navigator.app.exitApp();
-
-            return;
-
-        }
-
-
-
-        // Capacitor
-
-        if (
-            window.Capacitor &&
-            window.Capacitor.Plugins &&
-            window.Capacitor.Plugins.App
-        ) {
-
-            window.Capacitor.Plugins.App.exitApp();
-
-            return;
-
-        }
-
-
-
-    }
-    catch(error) {
-
-        console.log(
-            "Exit Error:",
-            error
-        );
-
-    }
-
-
-
-    alert(
-        "Exit works only inside Android APK."
-    );
-
-
-}
-
-
 
 // ================= STOP MUSIC =================
 
@@ -1599,5 +1525,18 @@ function resetAllData() {
 
     updateUI();
 
+
+}
+function exitGame() {
+
+    console.log("Website2APK:", window.Website2APK);
+    console.log("navigator.app:", window.navigator.app);
+    console.log("Capacitor:", window.Capacitor);
+
+    alert(
+        "Website2APK = " + !!window.Website2APK +
+        "\nCordova = " + !!window.navigator.app +
+        "\nCapacitor = " + !!window.Capacitor
+    );
 
 }
