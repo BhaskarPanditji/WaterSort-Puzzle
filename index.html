@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Water Sort</title>
+
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+
+<!-- ================= START SCREEN ================= -->
+
+<div id="startScreen" class="screen">
+
+    <img
+        src="IMG/MAIN MENU.png"
+        alt="Logo"
+        class="logo">
+
+    <button onclick="handleStart()">
+        ▶️ Start Game
+    </button>
+
+    <button onclick="openSettings()">
+        ⚙️ Options
+    </button>
+
+    <button onclick="exitGame()">
+        ❌ Exit
+    </button>
+
+</div>
+
+
+<!-- ================= SETTINGS ================= -->
+
+<div id="settingsScreen" class="screen" style="display:none;">
+
+    <h1>⚙️ Settings</h1>
+
+    <div class="settingBox">
+
+        <label class="settingItem">
+
+    <span>Music</span>
+
+    <label class="toggleCircle">
+
+        <input
+            type="checkbox"
+            id="musicToggle"
+            checked
+            onchange="toggleMusic()">
+
+        <span class="circle"></span>
+
+    </label>
+
+</label>
+
+<label class="settingItem">
+
+    <span>Sound Effects</span>
+
+    <label class="toggleCircle">
+
+        <input
+            type="checkbox"
+            id="soundToggle"
+            checked
+            onchange="toggleSound()">
+
+        <span class="circle"></span>
+
+    </label>
+
+</label>
+
+    </div>
+
+    <button onclick="closeSettings()">
+        ⬅ Back
+    </button>
+
+</div>
+
+
+
+
+<!-- ================= GAME ================= -->
+
+<div id="gameScreen" style="display:none;">
+
+    <img src="IMG/img.png" alt="Water Sort" class="game-title-img">
+
+    <div class="board">
+        <h3 id="levelText">
+            Level 1
+        </h3>
+    
+        <h4 id="moveText">
+            Moves : 0
+        </h4>
+
+        <h4 id="scoreText">
+        Score : 0
+        </h4>   
+    </div>
+
+    <div
+        class="container"
+        id="game">
+    </div>
+
+    <div class="buttons">
+
+        <!-- Back Button -->
+        <button id="backBtn" onclick="backToMenu()">
+        ⬅ Back to Menu
+        </button>
+
+        <button onclick="handleUndo()">
+            ↩ Undo
+        </button>
+
+        <button onclick="handleRestart()">
+            🔄 Restart
+        </button>
+
+        <button
+            id="nextBtn"
+            onclick="handleNext()"
+            disabled>
+
+            ➜ Next Level
+
+        </button>
+        
+    </div>
+
+</div>
+
+
+<!-- ================= WIN POPUP ================= -->
+
+<div
+    id="winPopup"
+    class="popup"
+    style="display:none;">
+
+    <div class="popupContent">
+
+        <h2>
+            🎉 Level Complete!
+        </h2>
+
+        <p>
+            Great Job!
+        </p>
+
+        <button onclick="handleNext()">
+            Next Level
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- ================= AUDIO ================= -->
+
+<audio
+    id="clickSound"
+    preload="auto"
+    src="Sounds/click.mp3">
+</audio>
+
+<audio
+    id="pourSound"
+    preload="auto"
+    src="Sounds/water_pour.mp3">
+</audio>
+
+<audio
+    id="winSound"
+    preload="auto"
+    src="Sounds/winner.mp3">
+</audio>
+
+<audio
+    id="bgMusic"
+    preload="auto"
+    loop
+    src="Sounds/bg.mp3">
+</audio>
+
+<audio
+    id="wrongSound"
+    preload="auto"
+    src="Sounds/wrong_move.mp3">
+</audio>
+
+<script src="js/script.js"></script>
+
+</body>
+</html>
