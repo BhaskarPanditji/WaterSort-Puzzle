@@ -471,4 +471,75 @@ button:disabled{
         opacity:0;
     }
 }
+.hintGlass{
+    box-shadow:0 0 20px gold !important;
+    animation:hintPulse .8s infinite alternate;
+}
 
+@keyframes hintPulse{
+    from{
+        transform:translateY(0);
+    }
+    to{
+        transform:translateY(-8px);
+    }
+}
+
+@keyframes hintGlow{
+
+    from{
+
+        box-shadow:0 0 10px yellow;
+
+    }
+
+    to{
+
+        box-shadow:0 0 30px gold;
+
+        transform:translateY(-8px);
+
+    }
+
+}
+
+/* ===========================
+   MENU
+=========================== */
+
+.menuButtons{
+
+    width:100%;
+    max-width:420px;
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:14px;
+
+}
+
+
+.menuButtons button{
+
+    width:100%;
+
+    font-size:18px;
+
+    padding:14px;
+
+    border-radius:15px;
+
+    transition:.25s;
+
+}
+
+
+.menuButtons button:hover{
+
+    transform:translateY(-3px) scale(1.03);
+
+    box-shadow:0 0 18px #3f8cff;
+
+}
