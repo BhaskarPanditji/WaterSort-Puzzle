@@ -12,6 +12,8 @@
 
 <!-- ================= START SCREEN ================= -->
 
+<!-- ================= START SCREEN ================= -->
+
 <div id="startScreen" class="screen">
 
     <img
@@ -19,17 +21,29 @@
         alt="Logo"
         class="logo">
 
-    <button onclick="handleStart()">
-        ▶️ Start Game
-    </button>
 
-    <button onclick="openSettings()">
-        ⚙️ Options
-    </button>
+    <div class="menuButtons">
 
-    <button onclick="exitGame()">
-        ❌ Exit
-    </button>
+        <button onclick="handleStart()">
+            ▶️ Play
+        </button>
+
+        <button
+            id="continueBtn"
+            onclick="continueGame()"
+            style="display:none;">
+            ▶ Continue
+        </button>
+
+        <button onclick="openSettings()">
+            ⚙️ Settings
+        </button>
+
+        <!-- <button onclick="exitGame()">
+            🚪 Exit
+        </button> -->
+
+    </div>
 
 </div>
 
@@ -105,8 +119,12 @@
         </h4>
 
         <h4 id="scoreText">
-        Score : 0
+            Score : 0
         </h4>   
+
+        <h4 id="hintText">
+            Hints : 1
+        </h4>
     </div>
 
     <div
@@ -127,6 +145,10 @@
 
         <button onclick="handleRestart()">
             🔄 Restart
+        </button>
+
+        <button onclick="showHint()">
+            💡 Hint
         </button>
 
         <button
