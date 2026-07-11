@@ -1,1591 +1,545 @@
-// ======================================
-// WATER SORT PRO
-// SCRIPT.JS
-// PART 1A
-// GLOBAL VARIABLES
-// ======================================
-
-// ---------- Game State ----------
-let level = 0;
-let score = 0;
-let moves = 0;
-
-let glasses = [];
-let originalGlasses = [];
-let history = [];
-
-let selected = null;
-let isBusy = false;
-let animLock = false;
-
-// ---------- Settings ----------
-let musicEnabled =
-    localStorage.getItem("music") !== "off";
-
-let soundEnabled =
-    localStorage.getItem("sound") !== "off";
-
-// ---------- Colors ----------
-const colors = [
-    "red",
-    "blue",
-    "green",
-    "yellow",
-    "purple",
-    "orange",
-    "cyan",
-    "pink"
-];
-
-// ======================================
-// AUDIO ELEMENTS
-// ======================================
-
-const clickSound =
-    document.getElementById("clickSound");
-
-const pourSound =
-    document.getElementById("pourSound");
-
-const winSound =
-    document.getElementById("winSound");
-
-const wrongSound =
-    document.getElementById("wrongSound");
-
-const bgMusic =
-    document.getElementById("bgMusic");
-
-// ======================================
-// CLICK SOUND
-// ======================================
-
-document.addEventListener("click", (e) => {
-
-    if (!soundEnabled) return;
-
-    if (
-        e.target.closest("button") ||
-        e.target.closest(".glass")
-    ) {
-
-        clickSound.currentTime = 0;
-
-        clickSound.play().catch(() => {});
-
-    }
-
-});
-
-// ======================================
-// BUTTON WRAPPERS
-// ======================================
-
-function handleStart() {
-    startGame();
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial,Helvetica,sans-serif;
 }
 
-function handleUndo() {
-    undo();
+body{
+    background:linear-gradient(135deg,#0f172a,#12479b);
+    color:#fff;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:20px;
+    overflow-x:hidden;
 }
 
-function handleRestart() {
-    restart();
+h1{
+    margin:15px 0;
+    text-align:center;
 }
 
-function handleNext() {
-    nextLevel();
-}
-// ======================================
-// WATER SORT PRO
-// SCRIPT.JS
-// PART 1B
-// START + MENU + SETTINGS
-// ======================================
-
-// ================= START GAME =================
-
-function startGame() {
-
-    document.getElementById("startScreen").style.display = "none";
-    document.getElementById("settingsScreen").style.display = "none";
-    document.getElementById("gameScreen").style.display = "block";
-    document.getElementById("winPopup").style.display = "none";
-
-    level = 0;
-    score = 0;
-    moves = 0;
-
-    history = [];
-    selected = null;
-    isBusy = false;
-    animLock = false;
-
-    document.getElementById("scoreText").innerText =
-        "Score : " + score;
-
-    document.getElementById("moveText").innerText =
-        "Moves : " + moves;
-
-    if (musicEnabled) {
-
-        bgMusic.currentTime = 0;
-
-        bgMusic.play().catch(() => {});
-
-    }
-
-    load();
-
+h3,h4{
+    margin:6px 0;
+    font-weight:normal;
 }
 
-
-// ================= BACK TO MENU =================
-
-function backToMenu() {
-
-    bgMusic.pause();
-    bgMusic.currentTime = 0;
-
-    history = [];
-    selected = null;
-    moves = 0;
-    isBusy = false;
-    animLock = false;
-
-    document.getElementById("gameScreen").style.display = "none";
-    document.getElementById("settingsScreen").style.display = "none";
-    document.getElementById("winPopup").style.display = "none";
-
-    document.getElementById("startScreen").style.display = "flex";
-
+.screen{
+    width:100%;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    gap:20px;
+    padding:20px;
 }
 
-
-// ================= OPEN SETTINGS =================
-
-function openSettings() {
-
-    bgMusic.pause();
-    bgMusic.currentTime = 0;
-
-    document.getElementById("startScreen").style.display = "none";
-    document.getElementById("settingsScreen").style.display = "flex";
-
-    document.getElementById("musicToggle").checked =
-        musicEnabled;
-
-    document.getElementById("soundToggle").checked =
-        soundEnabled;
-
+.logo{
+    width:500px;
+    max-width:90%;
+    height:auto;
 }
 
-
-// ================= CLOSE SETTINGS =================
-
-function closeSettings() {
-
-    document.getElementById("settingsScreen").style.display = "none";
-
-    document.getElementById("startScreen").style.display = "flex";
-
-    bgMusic.pause();
-    bgMusic.currentTime = 0;
-
+.game-title-img{
+    width:225px;
+    max-width:90%;
+    display:block;
+    margin:10px auto 15px;
 }
 
-
-// ================= MUSIC =================
-
-function toggleMusic() {
-
-    musicEnabled =
-        document.getElementById("musicToggle").checked;
-
-    localStorage.setItem(
-        "music",
-        musicEnabled ? "on" : "off"
-    );
-
-    if (!musicEnabled) {
-
-        bgMusic.pause();
-        bgMusic.currentTime = 0;
-
-        return;
-
-    }
-
-    if (
-        document.getElementById("gameScreen").style.display === "block"
-    ) {
-
-        bgMusic.currentTime = 0;
-
-        bgMusic.play().catch(() => {});
-
-    }
-
+.board{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:30px;
+    flex-wrap:wrap;
+    text-align:center;
+    margin-bottom:10px;
 }
 
-
-// ================= SOUND =================
-
-function toggleSound() {
-
-    soundEnabled =
-        document.getElementById("soundToggle").checked;
-
-    localStorage.setItem(
-        "sound",
-        soundEnabled ? "on" : "off"
-    );
-
-}
-// ======================================
-// WATER SORT PRO
-// SCRIPT.JS
-// PART 1C
-// AUDIO + HELPERS
-// ======================================
-
-// ================= SCORE =================
-
-function updateScore(value) {
-
-    score += value;
-
-    // Score negative nahi hone denge
-    if (score < 0) {
-        score = 0;
-    }
-
-    document.getElementById("scoreText").innerText =
-        "Score : " + score;
-
+button{
+    padding:12px 28px;
+    border:none;
+    border-radius:12px;
+    cursor:pointer;
+    font-size:17px;
+    font-weight:bold;
+    background:rgba(0,0,0,.25);
+    color:#fff;
+    border:2px solid #3f8cff;
+    transition:.25s;
+    white-space:nowrap;
 }
 
-
-// ================= POUR SOUND =================
-
-function playPour() {
-
-    if (!soundEnabled || !pourSound) return;
-
-    // Previous sound stop
-    pourSound.pause();
-
-    // Start from beginning
-    pourSound.currentTime = 0;
-
-    pourSound.volume = 0.8;
-
-    pourSound.play().catch(() => {});
-
-    // Stop after 1.5 seconds
-    setTimeout(() => {
-
-        pourSound.pause();
-        pourSound.currentTime = 0;
-
-    }, 1500);
-
+button:hover{
+    transform:translateY(-2px);
+    background:#1d4ed8;
 }
 
-
-// ================= WIN SOUND =================
-
-function playWin() {
-
-    if (!soundEnabled || !winSound) return;
-
-    if (!winSound) return;
-
-    winSound.pause();
-    winSound.currentTime = 0;
-
-    winSound.play().catch(() => {});
-
+button:disabled{
+    opacity:.5;
+    cursor:not-allowed;
 }
 
-
-// ================= WRONG SOUND =================
-
-function playWrong() {
-
-    if (!soundEnabled || !wrongSound) return;
-
-    if (!wrongSound) return;
-
-    wrongSound.pause();
-    wrongSound.currentTime = 0;
-
-    wrongSound.play().catch(() => {});
-
+.settingBox{
+    background:#ffffff10;
+    backdrop-filter:blur(8px);
+    border-radius:16px;
+    padding:25px;
+    width:300px;
+    max-width:95%;
 }
 
-
-// ================= WRONG MOVE =================
-
-function wrongMove() {
-
-    playWrong();
-
-    updateScore(-20);
-
-    selected = null;
-
-    draw();
-
+.settingItem{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin:15px 0;
+    font-size:18px;
 }
 
-
-// ================= SHUFFLE =================
-
-function shuffle(array) {
-
-    for (
-        let i = array.length - 1;
-        i > 0;
-        i--
-    ) {
-
-        const j =
-            Math.floor(
-                Math.random() * (i + 1)
-            );
-
-        [
-            array[i],
-            array[j]
-        ] = [
-            array[j],
-            array[i]
-        ];
-
-    }
-
+.container{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    align-items:flex-start;
+    gap:20px;
+    width:100%;
+    max-width:900px;
+    margin:30px auto;
 }
-// ======================================
-// WATER SORT PRO
-// SCRIPT.JS
-// PART 2A
-// LEVEL GENERATION
-// ======================================
 
-// ================= GENERATE =================
+.glass{
+    width:72px;
+    height:220px;
+    position:relative;
+    display:flex;
+    flex-direction:column-reverse;
+    overflow:hidden;
+    cursor:pointer;
 
-function generate(level) {
+    border:4px solid rgba(255,255,255,.9);
+    border-top:none;
 
-    const colorCount =
-        Math.min(
-            3 + Math.floor(level / 5),
-            6
+    border-radius:0 0 18px 18px;
+
+    background:
+        linear-gradient(
+            to right,
+            rgba(255,255,255,.18) 0%,
+            rgba(255,255,255,.05) 20%,
+            rgba(255,255,255,.02) 50%,
+            rgba(255,255,255,.08) 80%,
+            rgba(255,255,255,.18) 100%
         );
 
-    const emptyGlasses = 2;
+    backdrop-filter:blur(3px);
 
-    const selectedColors =
-        colors.slice(0, colorCount);
+    box-shadow:
+        inset 3px 0 6px rgba(255,255,255,.35),
+        inset -3px 0 6px rgba(255,255,255,.15),
+        inset 0 -6px 10px rgba(255,255,255,.15),
+        0 8px 18px rgba(0,0,0,.35);
 
-    const temp = [];
+    transition:.35s;
+}
 
-    // Har color ki 4 layers
-    selectedColors.forEach(color => {
+.glass:hover{
+    transform:translateY(-6px);
+}
+.glass::before{
+    content:"";
+    position:absolute;
+    left:6px;
+    top:12px;
+    width:8px;
+    height:78%;
+    border-radius:10px;
+    background:rgba(255,255,255,.35);
+    filter:blur(.5px);
+}
 
-        for (let i = 0; i < 4; i++) {
+.glass::after{
+    content:"";
+    position:absolute;
+    right:8px;
+    top:18px;
+    width:4px;
+    height:55%;
+    border-radius:10px;
+    background:rgba(255,255,255,.18);
+}
 
-            temp.push(color);
+.glass.selected{
+    border-color:#00e5ff;
+    box-shadow:
+        0 0 15px #00e5ff,
+        0 0 35px rgba(0,229,255,.35);
+}
 
-        }
+.layer{
+    width:100%;
+    height:25%;
+    transition:.3s;
+}
 
-    });
+.layer::before{
+    content:"";
+    position:absolute;
+    left:0;
+    top:0;
+    width:100%;
+    height:6px;
+    background:rgba(255,255,255,.35);
+}
 
-    shuffle(temp);
+.buttons{
+    display:flex;
+    justify-content:center;
+    flex-wrap:wrap;
+    gap:15px;
+    margin-top:20px;
+    width:100%;
+}
 
-    const totalGlasses =
-        colorCount + emptyGlasses;
+/* ==========================================
+   POPUP
+========================================== */
 
-    const board = Array.from(
+.popup{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.7);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    z-index:1000;
+    padding:20px;
+}
 
-        {
-            length: totalGlasses
-        },
+.popupContent{
+    background:#1e293b;
+    padding:35px;
+    border-radius:18px;
+    text-align:center;
+    width:100%;
+    max-width:420px;
+    box-sizing:border-box;
+    animation:popup .3s ease;
+}
 
-        () => []
+.popupContent h2{
+    margin-bottom:10px;
+}
 
-    );
+.popupContent p{
+    margin-bottom:20px;
+}
 
-    temp.forEach(color => {
 
-        while (true) {
+/* ==========================================
+   BACK BUTTON
+========================================== */
 
-            const randomGlass =
+#backBtn{
 
-                Math.floor(
+    padding:10px 18px;
 
-                    Math.random() *
-                    totalGlasses
+    border:2px solid #3f8cff;
 
-                );
+    background:rgba(0,0,0,.25);
 
-            if (
-                board[randomGlass].length < 4
-            ) {
+    color:#fff;
 
-                board[randomGlass].push(color);
+    border-radius:12px;
 
-                break;
+    font-size:17px;
 
-            }
+    font-weight:bold;
 
-        }
+    cursor:pointer;
 
-    });
+    transition:.25s;
 
-    return board;
+}
+
+#backBtn:hover{
+
+    background:#3f8cff;
+
+    transform:translateY(-2px);
 
 }
 
 
-// ================= CHECK SOLVED =================
+/* ==========================================
+   TOGGLE
+========================================== */
 
-function isSolved(board) {
+.toggleCircle input{
 
-    return board.every(glass => {
-
-        if (glass.length === 0)
-            return true;
-
-        if (glass.length !== 4)
-            return false;
-
-        return glass.every(
-
-            color =>
-
-                color === glass[0]
-
-        );
-
-    });
+    display:none;
 
 }
 
+.circle{
 
-// ================= VALID LEVEL =================
+    width:24px;
 
-function generateValidLevel() {
+    height:24px;
 
-    let board;
+    border-radius:50%;
 
-    do {
+    border:2px solid #5b5b5b;
 
-        board = generate(level);
+    background:transparent;
+
+    display:block;
+
+    cursor:pointer;
+
+    transition:.3s;
+
+}
+
+.toggleCircle input:checked + .circle{
+
+    background:#00ff66;
+
+    border-color:#00ff66;
+
+    box-shadow:
+        0 0 8px #00ff66,
+        0 0 18px #00ff66,
+        0 0 35px rgba(0,255,102,.6);
+
+}
+
+.toggleCircle input:not(:checked)+.circle{
+
+    background:transparent;
+
+    border-color:#777;
+
+    box-shadow:none;
+
+}
+
+.toggleCircle:hover .circle{
+
+    transform:scale(1.1);
+
+}
+/* ===========================
+   GLASS ANIMATIONS
+=========================== */
+
+.glass.lift{
+    transform:translateY(-40px);
+    transition:transform .25s ease;
+}
+
+.glass.pouring{
+    transition:transform .35s ease;
+}
+
+.glass.receiving{
+    border-color:#00e5ff;
+    box-shadow:
+        0 0 12px #00e5ff,
+        0 0 30px rgba(0,229,255,.7),
+        inset 0 0 18px rgba(0,229,255,.4);
+    animation:receiveGlow .5s ease;
+}
+
+.glass.completed{
+    border-color:#ffd700;
+    box-shadow:
+        0 0 15px gold,
+        0 0 35px gold,
+        0 0 60px rgba(255,215,0,.7);
+    animation:completeGlow 1s infinite alternate;
+}
+
+.glass.bounce{
+    animation:bounceGlass .35s;
+}
+
+@keyframes receiveGlow{
+    from{
+        transform:scale(1);
+    }
+    50%{
+        transform:scale(1.05);
+    }
+    to{
+        transform:scale(1);
+    }
+}
+
+@keyframes completeGlow{
+    from{
+        filter:brightness(1);
+    }
+    to{
+        filter:brightness(1.35);
+    }
+}
+
+@keyframes bounceGlass{
+    0%{transform:scale(1);}
+    40%{transform:scale(1.08);}
+    100%{transform:scale(1);}
+}
+
+/* ===========================
+   WATER STREAM
+=========================== */
+
+.stream{
+    position:fixed;
+    width:8px;
+    border-radius:20px;
+    transform-origin:top center;
+    animation:streamAnim .45s linear forwards;
+    pointer-events:none;
+    z-index:9999;
+}
+
+@keyframes streamAnim{
+    from{
+        opacity:1;
+        transform:scaleY(0);
+    }
+    to{
+        opacity:0;
+        transform:scaleY(1);
+    }
+}
+
+/* ===========================
+   RIPPLE
+=========================== */
+
+.ripple{
+    position:absolute;
+    left:50%;
+    bottom:5px;
+    width:18px;
+    height:18px;
+    margin-left:-9px;
+    border:2px solid rgba(255,255,255,.9);
+    border-radius:50%;
+    animation:rippleAnim .45s forwards;
+}
+
+@keyframes rippleAnim{
+    from{
+        transform:scale(.3);
+        opacity:1;
+    }
+    to{
+        transform:scale(3);
+        opacity:0;
+    }
+}
+
+/* ===========================
+   BUBBLES
+=========================== */
+
+.bubble{
+    position:absolute;
+    width:8px;
+    height:8px;
+    background:#fff;
+    border-radius:50%;
+    opacity:.8;
+    animation:bubbleAnim .8s linear forwards;
+}
+
+@keyframes bubbleAnim{
+    from{
+        transform:translateY(0);
+        opacity:1;
+    }
+    to{
+        transform:translateY(-60px);
+        opacity:0;
+    }
+}
+.hintGlass{
+    box-shadow:0 0 20px gold !important;
+    animation:hintPulse .8s infinite alternate;
+}
+
+@keyframes hintPulse{
+    from{
+        transform:translateY(0);
+    }
+    to{
+        transform:translateY(-8px);
+    }
+}
+
+@keyframes hintGlow{
+
+    from{
+
+        box-shadow:0 0 10px yellow;
 
     }
 
-    while (isSolved(board));
+    to{
 
-    return board;
+        box-shadow:0 0 30px gold;
 
-}
-
-
-// ================= RESET STATE =================
-
-function resetGameState() {
-
-    history = [];
-
-    selected = null;
-
-    moves = 0;
-
-    isBusy = false;
-
-    animLock = false;
-
-    document.getElementById(
-        "moveText"
-    ).innerText = "Moves : 0";
-
-}
-
-
-// ================= LOAD LEVEL =================
-
-function load() {
-
-    glasses = generateValidLevel();
-
-    originalGlasses =
-
-        JSON.parse(
-
-            JSON.stringify(glasses)
-
-        );
-
-    resetGameState();
-
-    document.getElementById(
-        "levelText"
-    ).innerText =
-        "Level " + (level + 1);
-
-    document.getElementById(
-        "nextBtn"
-    ).disabled = true;
-
-    document.getElementById(
-        "winPopup"
-    ).style.display = "none";
-
-    draw();
-
-}
-// ======================================
-// WATER SORT PRO
-// SCRIPT.JS
-// PART 2B
-// DRAW + CLICK
-// ======================================
-
-
-// ================= GET GLASS =================
-
-function getGlassEl(index) {
-
-    const game = document.getElementById("game");
-
-    return game.children[index];
-
-}
-
-
-// ================= DRAW =================
-
-function draw() {
-
-    const game = document.getElementById("game");
-
-    game.innerHTML = "";
-
-    glasses.forEach((glass, index) => {
-
-        const div = document.createElement("div");
-
-        div.className = "glass";
-
-        div.dataset.index = index;
-
-        // Selected Highlight
-        if (selected === index) {
-            div.classList.add("selected");
-        }
-
-        // ⭐ Completed Glass Highlight
-        if (
-            glass.length === 4 &&
-            glass.every(color => color === glass[0])
-        ) {
-            div.classList.add("completed");
-        }
-
-        // Water Layers
-        glass.forEach(color => {
-
-            const layer = document.createElement("div");
-
-            layer.className = "layer";
-
-            layer.style.background = color;
-
-            div.appendChild(layer);
-
-        });
-
-        // Click Event
-        div.addEventListener("click", () => {
-            clickGlass(index);
-        });
-
-        game.appendChild(div);
-
-    });
-
-}
-// ================= CLICK GLASS =================
-
-function clickGlass(index) {
-
-    if (isBusy || animLock)
-        return;
-
-    // Empty Glass
-    if (
-        selected === null &&
-        glasses[index].length === 0
-    ) {
-
-        return;
-
-    }
-
-    // First Selection
-    if (selected === null) {
-
-        selected = index;
-
-        draw();
-
-        return;
-
-    }
-
-    // Same Glass
-    if (selected === index) {
-
-        selected = null;
-
-        draw();
-
-        return;
-
-    }
-
-    // Pour
-    pour(selected, index);
-
-}
-// ======================================
-// WATER SORT PRO
-// SCRIPT.JS
-// PART 2C-1
-// ANIMATION HELPERS
-// ======================================
-
-
-// ================= LIFT GLASS =================
-
-function liftGlass(index) {
-
-    const el = getGlassEl(index);
-
-    if (!el) return;
-
-    el.classList.add("lift");
-
-}
-
-
-// ================= TILT GLASS =================
-
-function tiltGlass(fromIndex, toIndex) {
-
-    const el = getGlassEl(fromIndex);
-
-    if (!el) return;
-
-
-    const direction =
-        fromIndex < toIndex ? 1 : -1;
-
-
-    el.style.transform =
-    `translateY(-105px) rotate(${direction * 38}deg)`;
-
-
-    el.classList.add("pouring");
-
-}
-
-
-// ================= RESET GLASS =================
-
-function resetGlass(index) {
-
-    const el = getGlassEl(index);
-
-    if (!el) return;
-
-
-    el.style.transform = "";
-
-    el.classList.remove("lift");
-
-    el.classList.remove("pouring");
-
-    el.classList.remove("receiving");
-
-    el.classList.remove("bounce");
-
-}
-
-
-// ================= TARGET GLOW =================
-
-function glowGlass(index) {
-
-    const el = getGlassEl(index);
-
-    if (!el) return;
-
-
-    el.classList.add("receiving");
-
-
-    setTimeout(() => {
-
-        el.classList.remove("receiving");
-
-    }, 300);
-
-}
-
-
-// ================= BOUNCE EFFECT =================
-
-function bounceGlass(index) {
-
-    const el = getGlassEl(index);
-
-    if (!el) return;
-
-
-    el.classList.add("bounce");
-
-
-    setTimeout(() => {
-
-        el.classList.remove("bounce");
-
-    }, 350);
-
-}
-// ======================================
-// WATER SORT PRO
-// SCRIPT.JS
-// PART 2C-2
-// WATER ANIMATION EFFECTS
-// ======================================
-
-
-// ================= CREATE WATER STREAM =================
-
-function createStream(fromEl, toEl, color) {
-
-    if (!fromEl || !toEl) return;
-
-
-    const stream = document.createElement("div");
-
-    stream.className = "stream";
-
-
-    const from =
-        fromEl.getBoundingClientRect();
-
-    const to =
-        toEl.getBoundingClientRect();
-
-
-    stream.style.left =
-        (from.left + from.width / 2) + "px";
-
-
-    stream.style.top =
-        (from.top + from.height / 2) + "px";
-
-
-    stream.style.height =
-        Math.abs(to.top - from.top) + "px";
-
-
-    stream.style.background = color;
-
-
-    document.body.appendChild(stream);
-
-
-    setTimeout(() => {
-
-        stream.remove();
-
-    }, 450);
-
-}
-
-
-// ================= CREATE RIPPLE =================
-
-function createRipple(toEl) {
-
-    if (!toEl) return;
-
-
-    const ripple =
-        document.createElement("div");
-
-
-    ripple.className = "ripple";
-
-
-    toEl.appendChild(ripple);
-
-
-    setTimeout(() => {
-
-        ripple.remove();
-
-    }, 450);
-
-}
-
-
-// ================= CREATE BUBBLES =================
-
-function createBubbles(toEl) {
-
-    if (!toEl) return;
-
-
-    for (let i = 0; i < 3; i++) {
-
-
-        const bubble =
-            document.createElement("div");
-
-
-        bubble.className = "bubble";
-
-
-        bubble.style.left =
-            (20 + Math.random() * 60) + "%";
-
-
-        bubble.style.bottom =
-            "10px";
-
-
-        bubble.style.animationDelay =
-            (i * 0.1) + "s";
-
-
-        toEl.appendChild(bubble);
-
-
-        setTimeout(() => {
-
-            bubble.remove();
-
-        }, 800);
-
-    }
-
-}
-// ======================================
-// WATER SORT PRO
-// SCRIPT.JS
-// PART 2C-3
-// FINAL POUR FUNCTION
-// ======================================
-
-
-// ================= POUR =================
-
-function pour(from, to) {
-
-
-    if (isBusy || animLock)
-        return;
-
-
-    const source = glasses[from];
-
-    const target = glasses[to];
-
-
-    // Empty source
-    if (source.length === 0) {
-
-        wrongMove();
-
-        return;
-
-    }
-
-
-    // Full target
-    if (target.length >= 4) {
-
-        wrongMove();
-
-        return;
-
-    }
-
-
-    const color =
-        source[source.length - 1];
-
-
-    // Different color
-    if (
-        target.length > 0 &&
-        target[target.length - 1] !== color
-    ) {
-
-        wrongMove();
-
-        return;
-
-    }
-
-
-
-    // Save state for undo
-
-    history.push(
-        JSON.parse(
-            JSON.stringify(glasses)
-        )
-    );
-
-
-
-    moves++;
-
-    document.getElementById("moveText").innerText =
-        "Moves : " + moves;
-
-
-
-    updateScore(10);
-
-
-
-    playPour();
-
-
-
-    isBusy = true;
-
-    animLock = true;
-
-
-
-    const fromEl =
-        getGlassEl(from);
-
-
-    const toEl =
-        getGlassEl(to);
-
-
-
-    // Animation start
-
-    liftGlass(from);
-
-    tiltGlass(from, to);
-
-    glowGlass(to);
-
-
-
-    createStream(
-        fromEl,
-        toEl,
-        color
-    );
-
-
-
-    setTimeout(() => {
-
-
-        let space =
-            4 - target.length;
-
-
-
-        while (
-
-            source.length > 0 &&
-
-            source[source.length - 1] === color &&
-
-            space > 0
-
-        ) {
-
-
-            target.push(
-                source.pop()
-            );
-
-
-            space--;
-
-        }
-
-
-
-        draw();
-
-
-
-        const newTarget =
-            getGlassEl(to);
-
-
-
-        createRipple(newTarget);
-
-        createBubbles(newTarget);
-
-
-
-        setTimeout(() => {
-
-
-            resetGlass(from);
-
-            resetGlass(to);
-
-
-            bounceGlass(to);
-
-
-
-            selected = null;
-
-            isBusy = false;
-
-            animLock = false;
-
-
-
-            draw();
-
-
-            checkWin();
-
-
-
-        },250);
-
-
-
-    },450);
-
-
-}
-// ======================================
-// WATER SORT PRO
-// SCRIPT.JS
-// PART 3A
-// UNDO + RESTART
-// ======================================
-
-
-// ================= UNDO =================
-
-function undo() {
-
-
-    if (history.length === 0)
-        return;
-
-
-    glasses = history.pop();
-
-
-    selected = null;
-
-
-    moves = Math.max(
-        0,
-        moves - 1
-    );
-
-
-    updateScore(-10);
-
-
-
-    document.getElementById("moveText").innerText =
-        "Moves : " + moves;
-
-
-
-    draw();
-
-}
-
-
-
-// ================= RESTART =================
-
-function restart() {
-
-
-    glasses =
-        JSON.parse(
-            JSON.stringify(originalGlasses)
-        );
-
-
-
-    history = [];
-
-    selected = null;
-
-    moves = 0;
-
-    isBusy = false;
-
-    animLock = false;
-
-
-
-    score = 0;
-
-
-
-    document.getElementById("moveText").innerText =
-        "Moves : 0";
-
-
-
-    document.getElementById("scoreText").innerText =
-        "Score : 0";
-
-
-
-    document.getElementById("nextBtn").disabled =
-        true;
-
-
-
-    document.getElementById("winPopup").style.display =
-        "none";
-
-
-
-    if (musicEnabled) {
-
-        bgMusic.play().catch(()=>{});
-
-    }
-
-
-
-    draw();
-
-
-}
-// ======================================
-// WATER SORT PRO
-// SCRIPT.JS
-// PART 3B
-// WIN + NEXT LEVEL
-// ======================================
-
-
-// ================= CHECK WIN =================
-
-function checkWin() {
-
-
-    const win = glasses.every(glass => {
-
-
-        // Empty glass allowed
-
-        if (glass.length === 0) {
-
-            return true;
-
-        }
-
-
-        // Full hona chahiye
-
-        if (glass.length !== 4) {
-
-            return false;
-
-        }
-
-
-        // Same color check
-
-        return glass.every(
-            color =>
-                color === glass[0]
-        );
-
-
-    });
-
-
-
-    if (!win) {
-
-        return;
-
-    }
-
-
-
-    playWin();
-
-
-
-    bgMusic.pause();
-
-
-
-    document.getElementById("nextBtn").disabled =
-        false;
-
-
-
-    document.getElementById("winPopup").style.display =
-        "flex";
-
-
-}
-
-
-
-// ================= NEXT LEVEL =================
-
-function nextLevel() {
-
-
-    level++;
-
-
-    history = [];
-
-    selected = null;
-
-    moves = 0;
-
-    isBusy = false;
-
-    animLock = false;
-
-
-
-    document.getElementById("winPopup").style.display =
-        "none";
-
-
-
-    if (musicEnabled) {
-
-
-        bgMusic.currentTime = 0;
-
-
-        bgMusic.play().catch(()=>{});
-
-
-    }
-
-
-
-    load();
-
-
-}
-// ======================================
-// WATER SORT PRO
-// SCRIPT.JS
-// PART 4A
-// EXIT + SHORTCUTS + LOAD SETTINGS
-// ======================================
-
-
-
-// ================= STOP MUSIC =================
-
-window.addEventListener(
-    "beforeunload",
-    () => {
-
-        if (bgMusic) {
-
-            bgMusic.pause();
-
-        }
-
-    }
-);
-
-
-
-// ================= KEYBOARD CONTROL =================
-
-document.addEventListener(
-    "keydown",
-    (e) => {
-
-
-        // CTRL + Z = Undo
-
-        if (
-            e.ctrlKey &&
-            e.key.toLowerCase() === "z"
-        ) {
-
-            e.preventDefault();
-
-            undo();
-
-        }
-
-
-
-        // R = Restart
-
-        if (
-            e.key.toLowerCase() === "r"
-        ) {
-
-            restart();
-
-        }
-
-
-    }
-);
-
-
-
-// ================= LOAD SETTINGS =================
-
-window.onload = () => {
-
-
-    const musicToggle =
-        document.getElementById(
-            "musicToggle"
-        );
-
-
-    const soundToggle =
-        document.getElementById(
-            "soundToggle"
-        );
-
-
-
-    if (musicToggle) {
-
-        musicToggle.checked =
-            musicEnabled;
-
-    }
-
-// ================= EXIT GAME =================
-
-function exitGame() {
-
-    try {
-
-        // Website2APK
-        if (window.Website2APK?.exitApp) {
-            window.Website2APK.exitApp();
-            return;
-        }
-
-        // Cordova
-        if (navigator.app?.exitApp) {
-            navigator.app.exitApp();
-            return;
-        }
-
-        // Capacitor
-        if (window.Capacitor?.Plugins?.App?.exitApp) {
-            window.Capacitor.Plugins.App.exitApp();
-            return;
-        }
-
-    } catch (e) {
-        console.log(e);
-    }
-
-    alert("Exit not supported on this app.");
-}
-
-
-
-    if (soundToggle) {
-
-        soundToggle.checked =
-            soundEnabled;
-
-    }
-
-
-};
-// ======================================
-// WATER SORT PRO
-// SCRIPT.JS
-// PART 4B
-// FINAL CLEANUP + SAFETY
-// ======================================
-
-
-// ================= SAFE ELEMENT CHECK =================
-
-function safeText(id, text) {
-
-    const el = document.getElementById(id);
-
-    if (el) {
-
-        el.innerText = text;
+        transform:translateY(-8px);
 
     }
 
 }
 
+/* ===========================
+   MENU
+=========================== */
 
+.menuButtons{
 
-// ================= INITIAL UI UPDATE =================
+    width:100%;
+    max-width:420px;
 
-function updateUI() {
+    display:flex;
 
+    flex-direction:column;
 
-    safeText(
-        "levelText",
-        "Level " + (level + 1)
-    );
-
-
-    safeText(
-        "moveText",
-        "Moves : " + moves
-    );
-
-
-    safeText(
-        "scoreText",
-        "Score : " + score
-    );
-
+    gap:14px;
 
 }
 
 
+.menuButtons button{
 
-// ================= PREVENT DOUBLE TAP =================
+    width:100%;
 
-document.addEventListener(
-    "touchstart",
-    () => {
+    font-size:18px;
 
-        if (isBusy) {
+    padding:14px;
 
-            return;
+    border-radius:15px;
 
-        }
-
-    },
-    {
-        passive:true
-    }
-);
-
-
-
-// ================= AUTO SAVE SETTINGS =================
-
-function saveSettings() {
-
-
-    localStorage.setItem(
-        "music",
-        musicEnabled ? "on" : "off"
-    );
-
-
-    localStorage.setItem(
-        "sound",
-        soundEnabled ? "on" : "off"
-    );
-
+    transition:.25s;
 
 }
 
 
+.menuButtons button:hover{
 
-// ================= RESET ALL DATA =================
+    transform:translateY(-3px) scale(1.03);
 
-function resetAllData() {
-
-
-    level = 0;
-
-    score = 0;
-
-    moves = 0;
-
-
-    glasses = [];
-
-    originalGlasses = [];
-
-    history = [];
-
-
-    selected = null;
-
-    isBusy = false;
-
-    animLock = false;
-
-
-
-    updateUI();
-
+    box-shadow:0 0 18px #3f8cff;
 
 }
-// ================= EXIT GAME =================
-
-function exitGame() {
-
-    try {
-
-        // Website2APK
-        if (window.Website2APK?.exitApp) {
-            window.Website2APK.exitApp();
-            return;
-        }
-
-        // Cordova
-        if (navigator.app?.exitApp) {
-            navigator.app.exitApp();
-            return;
-        }
-
-        // Capacitor
-        if (window.Capacitor?.Plugins?.App?.exitApp) {
-            window.Capacitor.Plugins.App.exitApp();
-            return;
-        }
-
-    } catch (e) {
-        console.log(e);
-    }
-
-    alert("Exit not supported on this app.");
-}
-
